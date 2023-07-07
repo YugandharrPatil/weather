@@ -431,8 +431,9 @@ function App() {
 
 	return (
 		<>
+			<h1>Weather App</h1>
 			<label>
-				<input type="text" value={city} onChange={(e) => setCity(e.target.value)} />
+				<input type="text" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} />
 			</label>
 			<button onClick={fetchCurrentWeather}>Get Current Weather</button>
 			<button onClick={fetchForecast}>Get 5 Day Forecast</button>

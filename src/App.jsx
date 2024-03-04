@@ -458,21 +458,22 @@ export default function App() {
 					</div>
 				</form>
 				{data ? (
-					<div className="data">
-						<img src={`http://openweathermap.org/img/wn/${data.icon}@4x.png`} />
-						<h1>Current weather in {data.city}</h1>
-						<h1>
-							Country: {data.country} {data.countryEmoji}
+					<div className="text-center">
+						<img src={`http://openweathermap.org/img/wn/${data.icon}@4x.png`} className="mx-auto" />
+						<h1 className="text-2xl my-2">
+							Current weather in <span className="font-bold">{`${data.city}, ${data.country} ${data.countryEmoji}`}</span>
 						</h1>
-						<h2>
-							Weather: <span className="text-blue-500">{data.weather}</span>
-						</h2>
-						<h2>
-							Weather Description: <span className="text-blue-500">{data.description}</span>
-						</h2>
-						<h2>
-							Temperature: <span className="text-blue-500">{data.temperature} &#8451;</span>
-						</h2>
+						<div className="flex flex-col gap-2 mt-3 font-bold text-xl">
+							<p>
+								Weather: <span className="text-blue-500">{data.weather}</span>
+							</p>
+							<p>
+								Weather Description: <span className="text-blue-500">{data.description}</span>
+							</p>
+							<p>
+								Temperature: <span className="text-blue-500">{data.temperature} &#8451;</span>
+							</p>
+						</div>
 					</div>
 				) : (
 					""

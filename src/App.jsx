@@ -1,32 +1,47 @@
+import axios from "axios";
 import { useState } from "react";
+import { Button } from "./components/ui/button";
+import { Input } from "./components/ui/input";
+import { countryCodes } from "./data/country-codes";
 
-function App() {
+export default function App() {
 	const [city, setCity] = useState("");
+	const [data, setData] = useState();
+	const [error, setError] = useState();
 
-	const APIKey = "6d86767ca4f883543b3b2666a75a2519";
+	const APIKey = import.meta.env.VITE_API_KEY;
 	const unit = "metric";
 
-	const fetchCurrentWeather = async () => {
-		const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${APIKey}&units=${unit}`);
-		if (res.ok) {
-			const data = await res.json();
-
-			document.querySelector(".area").innerHTML = `
-			<img src="http://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png">
-			<h1>Current weather in ${city}</h1>
-			<h2>Weather: <span style="color: blue">${data.weather[0].main}</span></h2>
-			<h2>But what exactly?: <span style="color: blue">${data.weather[0].description}</span></h2>
-			<h2>Temperature: <span style="color: red">${data.main.temp} &#8451;</span></h2>
-		`;
-		} else {
-			document.querySelector(".area").innerHTML = `<h2 style="background: #ff5f5f">Please enter a valid city</h2>`;
+	const fetchCurrentWeather = async (e) => {
+		e.preventDefault();
+		try {
+			const { data } = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${APIKey}&units=${unit}`);
+			// console.log(data);
+			const { name: country, emoji } = countryCodes.filter((country) => country.code === data.sys.country)[0];
+			setData({
+				city: data.name,
+				country: country,
+				countryEmoji: emoji,
+				icon: data.weather[0].icon,
+				weather: data.weather[0].main,
+				description: data.weather[0].description,
+				temperature: data.main.temp,
+			});
+			setError(false);
+		} catch (err) {
+			console.error("this is the fucking error:", err);
+			setError(err);
+			setData(false);
+		} finally {
+			setCity("");
 		}
 	};
 
+	// TODO: fix this function
 	const fetchForecast = async () => {
-		const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${APIKey}&units=${unit}`);
-		if (res.ok) {
-			const data = await res.json();
+		try {
+			const { data } = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${APIKey}&units=${unit}`);
+			console.log(data);
 
 			let Humidity;
 			if (data.list[0].main.humidity >= 65) {
@@ -423,23 +438,47 @@ function App() {
 			<h2>Fog: ${Fog}</h2>
 			<h2>Rain in last 3 hours: ${Rain}</h2>
 			<h2>Probability of Rain: ${ProbalilityOfRain}</h2>
-		`;
-		} else {
+			`;
+		} catch (err) {
 			document.querySelector(".area").innerHTML = `<h2 style="background: #ff5f5f">Please enter a valid city</h2>`;
 		}
 	};
 
 	return (
 		<>
-			<h1>Weather App</h1>
-			<label>
-				<input type="text" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} />
-			</label>
-			<button onClick={fetchCurrentWeather}>Get Current Weather</button>
-			<button onClick={fetchForecast}>Get 5 Day Forecast</button>
-			<div className="area"></div>
+			<div className="container text-center mx-auto mt-10">
+				<h1 className="text-3xl font-bold my-4">Weather App</h1>
+				<form>
+					<Input className="w-1/3 mx-auto my-5" type="text" placeholder="Enter a City" value={city} onChange={(e) => setCity(e.target.value)} />
+					<div className="flex gap-4 w-fit mx-auto">
+						<Button onClick={fetchCurrentWeather}>Get Current Weather</Button>
+						<Button disabled onClick={fetchForecast}>
+							Get 5 Day Forecast
+						</Button>
+					</div>
+				</form>
+				{data ? (
+					<div className="data">
+						<img src={`http://openweathermap.org/img/wn/${data.icon}@4x.png`} />
+						<h1>Current weather in {data.city}</h1>
+						<h1>
+							Country: {data.country} {data.countryEmoji}
+						</h1>
+						<h2>
+							Weather: <span className="text-blue-500">{data.weather}</span>
+						</h2>
+						<h2>
+							Weather Description: <span className="text-blue-500">{data.description}</span>
+						</h2>
+						<h2>
+							Temperature: <span className="text-blue-500">{data.temperature} &#8451;</span>
+						</h2>
+					</div>
+				) : (
+					""
+				)}
+				{error && <p className="text-red-500">Please enter a valid city</p>}
+			</div>
 		</>
 	);
 }
-
-export default App;

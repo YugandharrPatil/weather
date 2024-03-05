@@ -8,7 +8,7 @@ import { countryCodes } from "./data/country-codes";
 export default function App() {
 	const [city, setCity] = useState("");
 	const [data, setData] = useState();
-	const [error, setError] = useState();
+	const [error, setError] = useState(null);
 	const [forecast, setForecast] = useState();
 
 	const APIKey = import.meta.env.VITE_API_KEY;
@@ -16,6 +16,11 @@ export default function App() {
 
 	const fetchCurrentWeather = async (e) => {
 		e.preventDefault();
+
+		if (city === "") {
+			setError("Please enter a City");
+			return;
+		}
 		try {
 			const { data } = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${APIKey}&units=${unit}`);
 			// console.log(data);
@@ -32,8 +37,10 @@ export default function App() {
 			setError(false);
 		} catch (err) {
 			console.error("this is the fucking error:", err);
-			setError(err);
-			setData(false);
+			if ((err.status = 404)) {
+				setError("Invalid city name. Please try again");
+			}
+			setData(null);
 		} finally {
 			setForecast(null);
 		}
@@ -41,13 +48,23 @@ export default function App() {
 
 	const fetchForecast = async (e) => {
 		e.preventDefault();
+
+		if (city === "") {
+			setError("Please enter a City");
+			return;
+		}
+
 		try {
 			const { data } = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${APIKey}&units=${unit}`);
 			setForecast(data.list);
 		} catch (err) {
 			console.error(err);
+			if ((err.status = 404)) {
+				setError("Invalid city name. Please try again");
+			}
 		} finally {
 			setData(null);
+			// setCity("");
 		}
 	};
 
@@ -57,13 +74,14 @@ export default function App() {
 				<h1 className="text-3xl font-bold my-4">Weather App</h1>
 				<form>
 					<Input className="w-1/3 mx-auto my-5" type="text" placeholder="Enter a City" value={city} onChange={(e) => setCity(e.target.value)} />
+					{error && <p className="text-red-500 font-semibold">{error}</p>}
 					<div className="flex gap-4 w-fit mx-auto">
 						<Button onClick={fetchCurrentWeather}>Get Current Weather</Button>
 						<Button onClick={fetchForecast}>Get 5 Day Forecast</Button>
 					</div>
 				</form>
 				{data ? (
-					<Card className="text-center mt-8 pb-8 md:w-2/3 lg:w-1/2 mx-auto">
+					<Card className="text-center mt-8 px-2 pb-8 md:w-2/3 lg:w-1/2 mx-auto">
 						<img src={`http://openweathermap.org/img/wn/${data.icon}@4x.png`} className="mx-auto" />
 						<h1 className="text-2xl my-2">
 							Current weather in <span className="font-bold">{`${data.city}, ${data.country} ${data.countryEmoji}`}</span>
@@ -105,7 +123,6 @@ export default function App() {
 									<p>Probability of Precipitation: {Math.round(weather.pop * 100)}&#37;</p>
 								</Card>
 							))}
-							{error && <p className="text-red-500">Please enter a valid city</p>}
 						</div>
 					</div>
 				)}
